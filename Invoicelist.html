@@ -105,8 +105,8 @@ if (sessionStorage.getItem("fromIndex") !== "true") {
 
 sessionStorage.removeItem("fromIndex");
 
-// ===== FETCH INVOICES FROM GITHUB =====
-const dataUrl = "https://raw.githubusercontent.com/rogergelasmar/Business_app/main/data.json";
+// ===== FETCH INVOICES FROM GITHUB PAGES =====
+const dataUrl = "https://rogergelasmar.github.io/Business_app/data.json"; // GitHub Pages URL
 let invoices = [];
 const tbody = document.querySelector('#invoice-table tbody');
 const filterInput = document.getElementById('filter');
@@ -120,7 +120,7 @@ fetch(dataUrl)
       renderInvoices();
   })
   .catch(err => {
-      console.error("Failed to load invoices from GitHub:", err);
+      console.error("Failed to load invoices from GitHub Pages:", err);
       invoices = [];
       renderInvoices();
   });
