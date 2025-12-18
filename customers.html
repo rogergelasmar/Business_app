@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Customers</title>
+  <title>customers</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
   .access-denied {
@@ -73,8 +73,8 @@
     <button class="nav-btn" onclick="location.href='cashcontrol.html'">Cash Control</button>
   </div>
 
-  <h1>Customers Page</h1>
-  <p>Here you can add and manage Customers.</p>
+  <h1>customers Page</h1>
+  <p>Here you can add and manage customers.</p>
 
   <!-- Customer form -->
   <form id="customer-form">
@@ -84,7 +84,7 @@
   </form>
 
   <!-- Customer list -->
-  <table id="Customers-table">
+  <table id="customers-table">
     <thead>
       <tr>
         <th>Name</th>
@@ -104,14 +104,14 @@ sessionStorage.removeItem("fromIndex");
     }
 
     const form = document.getElementById('customer-form');
-    const tableBody = document.querySelector('#Customers-table tbody');
+    const tableBody = document.querySelector('#customers-table tbody');
 
-    let Customers = JSON.parse(localStorage.getItem('Customers')) || [];
+    let customers = JSON.parse(localStorage.getItem('customers')) || [];
     let editIndex = null;
 
-    function renderCustomers() {
+    function rendercustomers() {
       tableBody.innerHTML = '';
-      Customers.forEach((c, index) => {
+      customers.forEach((c, index) => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${c.name}</td>
@@ -135,32 +135,32 @@ sessionStorage.removeItem("fromIndex");
       const payload = { name, phone };
 
       if (editIndex !== null) {
-        Customers[editIndex] = payload;
+        customers[editIndex] = payload;
         editIndex = null;
       } else {
-        Customers.push(payload);
+        customers.push(payload);
       }
 
-      localStorage.setItem('Customers', JSON.stringify(Customers));
-      renderCustomers();
+      localStorage.setItem('customers', JSON.stringify(customers));
+      rendercustomers();
       form.reset();
     });
 
     window.deleteCustomer = function(index) {
-      Customers.splice(index, 1);
-      localStorage.setItem('Customers', JSON.stringify(Customers));
-      renderCustomers();
+      customers.splice(index, 1);
+      localStorage.setItem('customers', JSON.stringify(customers));
+      rendercustomers();
     };
 
     window.editCustomer = function(index) {
-      const c = Customers[index];
+      const c = customers[index];
       document.getElementById('name').value = c.name;
       document.getElementById('phone').value = c.phone;
       editIndex = index;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    renderCustomers();
+    rendercustomers();
   </script>
 </body>
 </html>
