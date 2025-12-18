@@ -96,17 +96,6 @@
   </table>
 
   <script>
-  // ===== BLOCK DIRECT ACCESS =====
-if (sessionStorage.getItem("fromIndex") !== "true") {
-    document.body.innerHTML = `
-    <div class="access-denied">
-        <h1>Access Denied</h1>
-        <p>Please open this app using <strong>index.html</strong>.</p>
-        <a href="index.html">Go to Home</a>
-    </div>
-    `;
-    throw "Access Denied"; // stop further execution
-}
 
 // Clear the flag so refreshing doesn't bypass
 sessionStorage.removeItem("fromIndex");
