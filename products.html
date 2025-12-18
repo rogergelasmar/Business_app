@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Products</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+  .access-denied {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+.access-denied h1 { color: red; }
+.access-denied a {
+  margin-top: 10px;
+  text-decoration: none;
+  color: blue;
+}
+    body { font-family: Arial, sans-serif; margin: 20px; }
+
+    /* Top bar */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #ddd;
+      z-index: 20;
+      flex-wrap: wrap;
+    }
+
+    .back-btn { 
+      padding: 12px 18px; 
+      font-size: 16px; 
+      border: none; 
+      border-radius: 6px; 
+      background: #ef4444; 
+      color: #fff; 
+      cursor: pointer; 
+    }
+
+    .nav-btn {
+      background: #334155;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    label { display: flex; flex-direction: column; font-weight: bold; }
+    input { padding: 8px 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; width: 150px; }
+
+    /* Product form fixed below top bar */
+    #product-form {
+      position: fixed;
+      top: 120px; /* space for top-bar + nav buttons */
+      left: 0;
+      right: 0;
+      background: #fff;
+      padding: 10px 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #ddd;
+      z-index: 15;
+      align-items: flex-end;
+    }
+
+    .totals-container {
+      display: flex;
+      gap: 12px;
+      margin-left: auto;
+      align-items: flex-end;
+    }
+
+    main { margin-top: 220px; } /* space for fixed bar + form */
+
+    button { padding: 8px 14px; font-size: 14px; border: none; border-radius: 6px; cursor: pointer; }
+    button.add { background: #0ea5e9; color: #fff; }
+    button.delete { background: #ef4444; color: #fff; }
+    button.edit { background: #22c55e; color: #fff; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f1f5f9; }
+
+    /* Column width adjustments */
+    th:nth-child(1), td:nth-child(1) { width: 80px; }   /* Code */
+    th:nth-child(2), td:nth-child(2) { width: 300px; }  /* Description */
+    th:nth-child(3), td:nth-child(3) { width: 80px; }   /* Total Cost */
+    th:nth-child(4), td:nth-child(4) { width: 80px; }   /* Unit Cost */
+    th:nth-child(5), td:nth-child(5) { width: 120px; }  /* Selling Price */
+    th:nth-child(6), td:nth-child(6) { width: 120px; }  /* Selling Price LBP */
+    th:nth-child(7), td:nth-child(7) { width: 80px; }   /* Purchased Qty */
+    th:nth-child(8), td:nth-child(8) { width: 80px; }   /* Final Inventory */
+    th:nth-child(9), td:nth-child(9) { width: 100px; }  /* Actions */
+  </style>
+  
+</head>
+<body>
+
+
+<div class="top-bar">
+  <button class="back-btn" onclick="goHome()">Back to Home</button>
+  
+  <!-- Navigation buttons -->
+  <button class="nav-btn" onclick="location.href='customers.html'">Customers</button>
+  <button class="nav-btn" onclick="location.href='invoice.html'">New Invoice</button>
+  <button class="nav-btn" onclick="location.href='invoicelist.html'">Invoices List</button>
+  <button class="nav-btn" onclick="location.href='cashcontrol.html'">Cash Control</button>
+  
+  <label>
+    Exchange Rate (USD → LBP)
+    <input type="text" id="exchange_rate" value="90000" />
+  </label>
+
+  <!-- Filter input on top-right -->
+  <label style="margin-left:auto;">
+    Filter (Code / Description)
+    <input type="text" id="filter-input" placeholder="Search..." />
+  </label>
+</div>
+
+<!-- Product form fixed -->
+<form id="product-form">
+  <input type="text" id="code" placeholder="Product Code" required />
+  <input type="text" id="description" placeholder="Description" required />
+  <input type="number" id="total_cost" placeholder="Total Cost (USD)" step="0.01" required />
+  <input type="number" id="selling_price" placeholder="Selling Price (USD)" step="0.0000000001" required />
+  <input type="number" id="purchased_qty" placeholder="Purchased Quantity" required />
+  <button type="submit" class="add">Add Product</button>
+
+  <!-- Totals Fields in a row -->
+  <div class="totals-container">
+    <label>
+      Total Inventory
+      <input type="text" id="total_inventory" readonly />
+    </label>
+    <label>
+      Total Inventory Value (USD)
+      <input type="text" id="total_inventory_value" readonly />
+    </label>
+    <label>
+      Total Selling Value (USD)
+      <input type="text" id="total_selling_value" readonly />
+    </label>
+  </div>
+</form>
+
+<main>
+  <h1>Products</h1>
+
+  <!-- Product list -->
+  <table id="products-table">
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>Description</th>
+        <th>Total Cost (USD)</th>
+        <th>Unit Cost (USD)</th>
+        <th>Selling Price (USD)</th>
+        <th>Selling Price (LBP)</th>
+        <th>Purchased Qty</th>
+        <th>Final Inventory</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<script>
+// ===== BLOCK DIRECT ACCESS =====
+if (sessionStorage.getItem("fromIndex") !== "true") {
+    document.body.innerHTML = `
+    <div class="access-denied">
+        <h1>Access Denied</h1>
+        <p>Please open this app using <strong>index.html</strong>.</p>
+        <a href="index.html">Go to Home</a>
+    </div>
+    `;
+    throw "Access Denied"; // stop further execution
+}
+
+// Clear the flag so refreshing doesn't bypass
+sessionStorage.removeItem("fromIndex");
+function goHome() {
+  window.location.href = 'index.html';
+}
+
+const form = document.getElementById('product-form');
+const tableBody = document.querySelector('#products-table tbody');
+let products = JSON.parse(localStorage.getItem('products')) || [];
+let invoices = JSON.parse(localStorage.getItem('invoices')) || [];
+let editIndex = null;
+
+function getExchangeRate() {
+  return Number(document.getElementById('exchange_rate').value.replace(/,/g, '')) || 90000;
+}
+
+function calculateSoldQty(code) {
+  let totalSold = 0;
+  invoices.forEach(inv => {
+    inv.items.forEach(item => {
+      if(item.code === code) totalSold += item.qty;
+    });
+  });
+  return totalSold;
+}
+
+function renderProducts() {
+  const rate = getExchangeRate();
+  tableBody.innerHTML = '';
+
+  let totalInventoryQty = 0;
+  let totalInventoryValue = 0;
+  let totalSellingValue = 0;
+
+  products.forEach((p, index) => {
+    const qty = p.purchased_qty || 0;
+    const totalCost = p.total_cost !== undefined ? parseFloat(p.total_cost) : 0;
+    const unitCost = qty > 0 ? totalCost / qty : 0;
+    const totalSold = calculateSoldQty(p.code);
+    const finalInventory = qty - totalSold;
+    const sellingLBP = (p.selling_price || 0) * rate;
+
+    // Accumulate totals
+    totalInventoryQty += finalInventory;
+    totalInventoryValue += finalInventory * unitCost;
+    totalSellingValue += finalInventory * (p.selling_price || 0);
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${p.code}</td>
+      <td>${p.description}</td>
+      <td>${totalCost.toFixed(2)}</td>
+      <td>${unitCost.toFixed(2)}</td>
+      <td>${(p.selling_price || 0).toFixed(10)}</td>
+      <td>${sellingLBP.toLocaleString()}</td>
+      <td>${qty}</td>
+      <td>${finalInventory}</td>
+      <td>
+        <button class="edit" type="button" onclick="editProduct(${index})">Edit</button>
+        <button class="delete" type="button" onclick="deleteProduct(${index})">Delete</button>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  });
+
+  // Update totals fields
+  document.getElementById('total_inventory').value = totalInventoryQty;
+  document.getElementById('total_inventory_value').value = totalInventoryValue.toFixed(2);
+  document.getElementById('total_selling_value').value = totalSellingValue.toFixed(2);
+}
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const code = document.getElementById('code').value.trim();
+  const description = document.getElementById('description').value.trim();
+  const totalCost = parseFloat(document.getElementById('total_cost').value);
+  const sellingPrice = parseFloat(document.getElementById('selling_price').value);
+  const purchasedQty = parseInt(document.getElementById('purchased_qty').value, 10);
+
+  if (!code || !description || isNaN(totalCost) || isNaN(sellingPrice) || isNaN(purchasedQty)) {
+    alert('Please fill all fields correctly.');
+    return;
+  }
+
+  const payload = { code, description, total_cost: totalCost, selling_price: sellingPrice, purchased_qty: purchasedQty };
+
+  if (editIndex !== null) {
+    products[editIndex] = payload;
+    editIndex = null;
+  } else {
+    const existingIndex = products.findIndex(p => p.code === code);
+    if (existingIndex !== -1) {
+      products[existingIndex].purchased_qty += purchasedQty;
+      products[existingIndex].total_cost += totalCost;
+      products[existingIndex].description = description;
+      products[existingIndex].selling_price = sellingPrice;
+    } else {
+      products.push(payload);
+    }
+  }
+
+  localStorage.setItem('products', JSON.stringify(products));
+  renderProducts();
+  form.reset();
+});
+
+window.deleteProduct = function(index) {
+  products.splice(index, 1);
+  localStorage.setItem('products', JSON.stringify(products));
+  renderProducts();
+};
+
+window.editProduct = function(index) {
+  const p = products[index];
+  document.getElementById('code').value = p.code;
+  document.getElementById('description').value = p.description;
+  document.getElementById('total_cost').value = p.total_cost || 0;
+  document.getElementById('selling_price').value = p.selling_price || 0;
+  document.getElementById('purchased_qty').value = p.purchased_qty || 0;
+  editIndex = index;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+document.getElementById('exchange_rate').addEventListener('input', renderProducts);
+
+const filterInput = document.getElementById('filter-input');
+filterInput.addEventListener('input', () => {
+  const filterText = filterInput.value.trim().toLowerCase();
+  Array.from(tableBody.rows).forEach(row => {
+    const code = row.cells[0].textContent.toLowerCase();
+    const desc = row.cells[1].textContent.toLowerCase();
+    row.style.display = (code.includes(filterText) || desc.includes(filterText)) ? '' : 'none';
+  });
+});
+
+renderProducts();
+</script>
+
+</body>
+</html>

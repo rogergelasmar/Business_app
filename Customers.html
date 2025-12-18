@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Customers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+  .access-denied {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+.access-denied h1 { color: red; }
+.access-denied a {
+  margin-top: 10px;
+  text-decoration: none;
+  color: blue;
+}
+    body { font-family: Arial, sans-serif; margin: 20px; }
+
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .back-btn { 
+      padding: 12px 18px; 
+      font-size: 16px; 
+      border: none; 
+      border-radius: 6px; 
+      background: #ef4444; 
+      color: #fff; 
+      cursor: pointer; 
+    }
+
+    .nav-btn {
+      background: #334155;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    form { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    input { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; }
+    button { padding: 8px 14px; font-size: 14px; border: none; border-radius: 6px; cursor: pointer; }
+    button.add { background: #0ea5e9; color: #fff; }
+    button.delete { background: #ef4444; color: #fff; }
+    button.edit { background: #22c55e; color: #fff; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f1f5f9; }
+  </style>
+ 
+</head>
+<body>
+
+
+  <!-- Top bar with navigation -->
+  <div class="top-bar">
+    <button class="back-btn" onclick="goHome()">Back to Home</button>
+    <button class="nav-btn" onclick="location.href='products.html'">Products</button>
+    <button class="nav-btn" onclick="location.href='invoice.html'">New Invoice</button>
+    <button class="nav-btn" onclick="location.href='invoicelist.html'">Invoices List</button>
+    <button class="nav-btn" onclick="location.href='cashcontrol.html'">Cash Control</button>
+  </div>
+
+  <h1>Customers Page</h1>
+  <p>Here you can add and manage customers.</p>
+
+  <!-- Customer form -->
+  <form id="customer-form">
+    <input type="text" id="name" placeholder="Customer Name" required />
+    <input type="text" id="phone" placeholder="Phone Number" required />
+    <button type="submit" class="add">Add Customer</button>
+  </form>
+
+  <!-- Customer list -->
+  <table id="customers-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Phone Number</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+  // ===== BLOCK DIRECT ACCESS =====
+if (sessionStorage.getItem("fromIndex") !== "true") {
+    document.body.innerHTML = `
+    <div class="access-denied">
+        <h1>Access Denied</h1>
+        <p>Please open this app using <strong>index.html</strong>.</p>
+        <a href="index.html">Go to Home</a>
+    </div>
+    `;
+    throw "Access Denied"; // stop further execution
+}
+
+// Clear the flag so refreshing doesn't bypass
+sessionStorage.removeItem("fromIndex");
+    function goHome() {
+      window.location.href = 'index.html';
+    }
+
+    const form = document.getElementById('customer-form');
+    const tableBody = document.querySelector('#customers-table tbody');
+
+    let customers = JSON.parse(localStorage.getItem('customers')) || [];
+    let editIndex = null;
+
+    function renderCustomers() {
+      tableBody.innerHTML = '';
+      customers.forEach((c, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${c.name}</td>
+          <td>${c.phone}</td>
+          <td>
+            <button class="edit" type="button" onclick="editCustomer(${index})">Edit</button>
+            <button class="delete" type="button" onclick="deleteCustomer(${index})">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+
+      if (!name || !phone) { alert('Please fill all fields correctly.'); return; }
+
+      const payload = { name, phone };
+
+      if (editIndex !== null) {
+        customers[editIndex] = payload;
+        editIndex = null;
+      } else {
+        customers.push(payload);
+      }
+
+      localStorage.setItem('customers', JSON.stringify(customers));
+      renderCustomers();
+      form.reset();
+    });
+
+    window.deleteCustomer = function(index) {
+      customers.splice(index, 1);
+      localStorage.setItem('customers', JSON.stringify(customers));
+      renderCustomers();
+    };
+
+    window.editCustomer = function(index) {
+      const c = customers[index];
+      document.getElementById('name').value = c.name;
+      document.getElementById('phone').value = c.phone;
+      editIndex = index;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    renderCustomers();
+  </script>
+</body>
+</html>

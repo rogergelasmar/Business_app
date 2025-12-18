@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stock & Invoicing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0;
+      background: #fafafa;
+      color: #222;
+    }
+
+    /* LOGIN */
+    .login-box {
+      max-width: 360px;
+      margin: 120px auto;
+      padding: 24px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.1);
+    }
+
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .login-box input {
+      width: 90%;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      font-size: 18px;
+      background: #22c55e;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* MAIN APP */
+    header {
+      background: #1e293b;
+      color: #fff;
+      padding: 16px;
+    }
+
+    header h1 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    nav button {
+      flex: 1 1 calc(50% - 10px);
+      padding: 90px 0;
+      font-size: 28px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      border: none;
+    }
+
+    nav button.primary {
+      background: #22c55e;
+      color: #073b18;
+    }
+
+    nav button:not(.primary) {
+      background: #334155;
+      color: #fff;
+    }
+
+    .logout {
+      background: #ef4444 !important;
+      color: white;
+      font-size: 30px;
+      padding: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-box" id="loginBox">
+  <h2>Login</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <div class="error" id="error"></div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="hidden">
+  <header>
+    <h1>Stock & Invoicing</h1>
+    <nav>
+      <button onclick="openProducts()">Products</button>
+      <button onclick="openCustomers()">Customers</button>
+      <button onclick="openInvoices()">Invoices</button>
+      <button class="primary" onclick="openInvoice()">New Invoice</button>
+      <button onclick="openCashControl()">Cash Control</button>
+      <button class="logout" onclick="logout()">Logout</button>
+    </nav>
+  </header>
+</div>
+
+<script>
+  /* ===== LOGIN CONFIG ===== */
+  const VALID_USERNAME = "admin";
+  const VALID_PASSWORD = "6292";
+
+  /* ===== AUTO LOGIN CHECK ===== */
+  window.onload = function () {
+    if (sessionStorage.getItem("loggedIn") === "true") {
+      showApp();
+    }
+  };
+
+  function login() {
+    const u = document.getElementById("username").value.trim();
+    const p = document.getElementById("password").value.trim();
+
+    if (u === VALID_USERNAME && p === VALID_PASSWORD) {
+      sessionStorage.setItem("loggedIn", "true"); // ✅ sessionStorage
+      showApp();
+    } else {
+      document.getElementById("error").textContent =
+        "Invalid username or password";
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem("loggedIn"); // ✅ clears session
+    location.reload();
+  }
+
+  function showApp() {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("app").classList.remove("hidden");
+  }
+
+  /* ===== NAVIGATION ===== */
+  function openProducts() {
+    sessionStorage.setItem("fromIndex", "true"); // set the flag
+    window.location.href = "products.html";  // navigate to the page
+}
+
+  function openCustomers() {
+    sessionStorage.setItem("fromIndex", "true"); // set the flag
+    window.location.href = "customers.html";  // navigate to the page
+}
+
+  function openInvoices() {
+    sessionStorage.setItem("fromIndex", "true"); // set the flag
+    window.location.href = "invoicelist.html";  // navigate to the page
+}
+
+  function openInvoice() {
+    sessionStorage.setItem("fromIndex", "true"); // set the flag
+    window.location.href = "invoice.html";  // navigate to the page
+}
+
+function openCashControl() {
+    sessionStorage.setItem("fromIndex", "true"); // set the flag
+    window.location.href = "cashcontrol.html";  // navigate to the page
+}
+</script>
+
+</body>
+</html>

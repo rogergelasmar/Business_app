@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>New Invoice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+  .access-denied {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+.access-denied h1 { color: red; }
+.access-denied a {
+  margin-top: 10px;
+  text-decoration: none;
+  color: blue;
+}
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; }
+    .back-btn { padding: 12px 18px; font-size: 16px; border: none; border-radius: 6px; background: #ef4444; color: #fff; cursor: pointer; }
+
+    form { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
+
+    .invoice-info {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .invoice-info label {
+      flex: 1;
+      min-width: 150px;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    input, select { padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; font-weight: normal; }
+
+    .item-row { display: flex; gap: 10px; align-items: flex-end; }
+    .item-row label { flex: 1; display: flex; flex-direction: column; }
+    .remove-btn { background: #ef4444; color: #fff; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; }
+
+    button { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; }
+    button.add { background: #0ea5e9; color: #fff; }
+    button.save { background: #22c55e; color: #fff; }
+
+    .totals-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grand-total { font-weight: bold; }
+  </style>
+ 
+</head>
+
+<body>
+
+
+<div class="top-bar">
+  <button class="back-btn" onclick="window.location.href='index.html'">Back to Home</button>
+</div>
+
+<h1>Create New Invoice</h1>
+
+<form id="invoice-form">
+
+  <div class="invoice-info">
+    <label>
+      Invoice Number
+      <input type="text" id="invoice_number" readonly />
+    </label>
+
+    <label>
+      Date
+      <input type="date" id="date" required />
+    </label>
+
+    <label>
+      Phone Number
+      <input type="text" id="phone" readonly />
+    </label>
+
+    <label>
+      Exchange Rate USD/LBP
+      <input type="number" id="exchange_rate" value="90000" />
+    </label>
+  </div>
+
+  <label>
+    Customer
+    <select id="customer_select" required>
+      <option value="">-- Select Customer --</option>
+    </select>
+  </label>
+
+  <div id="items-container">
+    <div class="item-row">
+      <label>Item
+        <select class="item-code"></select>
+      </label>
+      <label>Qty
+        <input type="number" class="qty-sold" />
+      </label>
+      <label>Unit Price
+        <input type="text" class="unit-price" readonly />
+      </label>
+      <label>Discount %
+        <input type="number" class="discount" step="0.0000000001" />
+      </label>
+      <label>Total
+        <input type="text" class="total" readonly />
+      </label>
+      <button type="button" class="remove-btn" onclick="removeRow(this)">X</button>
+    </div>
+  </div>
+
+  <button type="button" class="add" onclick="addItemRow()">+ Add Item</button>
+
+  <div class="totals-wrap">
+    <div class="grand-total">Total USD: <span id="total_usd">0.00</span></div>
+    <div class="grand-total">Total LBP: <span id="total_lbp">0</span></div>
+  </div>
+
+  <button type="submit" class="save">Save Invoice</button>
+
+</form>
+
+<script>
+// ===== BLOCK DIRECT ACCESS =====
+if (sessionStorage.getItem("fromIndex") !== "true") {
+    document.body.innerHTML = `
+    <div class="access-denied">
+        <h1>Access Denied</h1>
+        <p>Please open this app using <strong>index.html</strong>.</p>
+        <a href="index.html">Go to Home</a>
+    </div>
+    `;
+    throw "Access Denied"; // stop further execution
+}
+
+// Clear the flag so refreshing doesn't bypass
+sessionStorage.removeItem("fromIndex");
+if (!localStorage.getItem("products")) {
+  localStorage.setItem("products", JSON.stringify([
+    {code: "A0001", description: "Item 1", total_cost: 2, selling_price: 3, purchased_qty: 2},
+    {code: "A0002", description: "boucles", total_cost: 0.9, selling_price: 0.56, purchased_qty: 3}
+  ]));
+}
+
+if (!localStorage.getItem("customers")) {
+  localStorage.setItem("customers", JSON.stringify([
+    {name: "Roger El Asmar", phone: "70129449"},
+    {name: "Catherine Haddad", phone: "70406091"}
+  ]));
+}
+
+function getInvoicePreview() {
+  const last = parseInt(localStorage.getItem("lastInvoiceNumber")) || 0;
+  return "INV-" + String(last + 1).padStart(5, "0");
+}
+
+function commitInvoiceNumber() {
+  let last = parseInt(localStorage.getItem("lastInvoiceNumber")) || 0;
+  last++;
+  localStorage.setItem("lastInvoiceNumber", last);
+  return "INV-" + String(last).padStart(5, "0");
+}
+
+document.getElementById("invoice_number").value = getInvoicePreview();
+
+const customers = JSON.parse(localStorage.getItem("customers")) || [];
+const products = JSON.parse(localStorage.getItem("products")) || [];
+
+const customerSelect = document.getElementById("customer_select");
+const phoneInput = document.getElementById("phone");
+
+customers.forEach((c, i) => {
+  const opt = document.createElement("option");
+  opt.value = i;
+  opt.textContent = c.name;
+  customerSelect.appendChild(opt);
+});
+
+customerSelect.addEventListener("change", () => {
+  phoneInput.value = customerSelect.value !== "" ? customers[customerSelect.value].phone : "";
+});
+
+const itemsContainer = document.getElementById("items-container");
+
+function populateProducts(select) {
+  select.innerHTML = "<option value=''>-- Select --</option>";
+  products.forEach((p, i) => {
+    const o = document.createElement("option");
+    o.value = i;
+    o.textContent = `${p.code} - ${p.description}`;
+    select.appendChild(o);
+  });
+}
+
+function calculateTotals() {
+  let sum = 0;
+  document.querySelectorAll(".item-row").forEach(row => {
+    const qty = +row.querySelector(".qty-sold").value || 0;
+    const price = +row.querySelector(".unit-price").dataset.val || 0;
+    const disc = +row.querySelector(".discount").value || 0;
+    let total = qty * price;
+    if (disc) total -= total * disc / 100;
+    row.querySelector(".total").value = total.toFixed(2); // display 2 decimals
+    sum += total;
+  });
+
+  const rate = +document.getElementById("exchange_rate").value || 90000;
+  document.getElementById("total_usd").textContent = sum.toFixed(2);
+  document.getElementById("total_lbp").textContent = Math.round(sum * rate).toLocaleString();
+}
+
+function attachRowEvents(row) {
+  const select = row.querySelector(".item-code");
+  const priceInput = row.querySelector(".unit-price");
+  const qtyInput = row.querySelector(".qty-sold");
+  const discountInput = row.querySelector(".discount");
+
+  populateProducts(select);
+
+  function recalc() {
+    const idx = select.value;
+    const qty = +qtyInput.value || 0;
+    if (idx !== "") {
+      const p = products[idx];
+      priceInput.value = p.selling_price.toFixed(2);
+      priceInput.dataset.val = p.selling_price;
+    } else {
+      priceInput.value = "";
+      priceInput.dataset.val = "";
+    }
+    calculateTotals();
+  }
+
+  select.addEventListener("change", recalc);
+  discountInput.addEventListener("input", recalc);
+
+  qtyInput.addEventListener("input", () => {
+    const idx = select.value;
+    if (idx !== "") {
+      const p = products[idx];
+      const maxQty = p.purchased_qty;
+      if (+qtyInput.value > maxQty) {
+        alert(`Maximum quantity available for ${p.description} is ${maxQty}`);
+        qtyInput.value = maxQty;
+      }
+      if (+qtyInput.value < 1) qtyInput.value = 1;
+    }
+    recalc();
+  });
+}
+
+function addItemRow() {
+  const row = itemsContainer.firstElementChild.cloneNode(true);
+  row.querySelectorAll("input").forEach(i => i.value = "");
+  attachRowEvents(row);
+  itemsContainer.appendChild(row);
+}
+
+function removeRow(btn) {
+  if (itemsContainer.children.length > 1) {
+    btn.parentElement.remove();
+    calculateTotals();
+  }
+}
+
+attachRowEvents(itemsContainer.firstElementChild);
+document.getElementById("exchange_rate").addEventListener("input", calculateTotals);
+
+document.getElementById("invoice-form").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const invoiceNumber = commitInvoiceNumber();
+  const date = document.getElementById("date").value;
+  const custIdx = customerSelect.value;
+  if (!date || custIdx === "") { alert("Select date and customer"); return; }
+  const rate = +document.getElementById("exchange_rate").value || 90000;
+
+  const items = [...document.querySelectorAll(".item-row")].map(row => {
+    const idx = row.querySelector(".item-code").value;
+    const qty = +row.querySelector(".qty-sold").value || 0;
+    const discount = +row.querySelector(".discount").value || 0;
+    if (idx !== "" && qty > 0) {
+      const p = products[idx];
+      const unitCost = p.total_cost / p.purchased_qty;
+      const totalUSD = qty * p.selling_price * (discount ? (1 - discount / 100) : 1);
+      const totalCost = qty * unitCost;
+      return {
+        code: p.code,
+        description: p.description,
+        qty,
+        unitPrice: p.selling_price,
+        discount,
+        totalUSD,
+        totalCost
+      };
+    }
+    return null;
+  }).filter(i => i !== null);
+
+  if (!items.length) { alert("Add at least one item"); return; }
+
+  const totalUSD = items.reduce((a, i) => a + i.totalUSD, 0);
+  const totalLBP = Math.round(totalUSD * rate);
+  const totalCost = items.reduce((a, i) => a + i.totalCost, 0);
+
+  const invoices = JSON.parse(localStorage.getItem("invoices")) || [];
+  invoices.push({
+    invoiceNumber,
+    date,
+    customer: customers[custIdx],
+    items,
+    totals: { usd: totalUSD, lbp: totalLBP, cost: totalCost }
+  });
+  localStorage.setItem("invoices", JSON.stringify(invoices));
+
+  alert("Invoice saved!");
+  window.location.href = "invoicelist.html";
+});
+</script>
+
+</body>
+</html>

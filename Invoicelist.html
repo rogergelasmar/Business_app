@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Invoice List</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+.access-denied {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+.access-denied h1 { color: red; }
+.access-denied a {
+  margin-top: 10px;
+  text-decoration: none;
+  color: blue;
+}
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  .top-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .back-btn, .add-btn, .nav-btn { padding: 12px 18px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; }
+  .back-btn { background: #ef4444; color: #fff; }
+  .add-btn { background: #22c55e; color: #fff; }
+  .nav-btn { background: #334155; color: #fff; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 14px; }
+  th { background-color: #f3f3f3; }
+  input.payment-input { width: 100px; padding: 4px; }
+  input.payment-input.fully-paid { background-color: #d1fae5; } /* light green when fully paid */
+  .balance-paid { color: green; font-weight: bold; }
+  .balance-unpaid { color: red; font-weight: bold; }
+  .delete-btn { background: #ef4444; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; }
+  #filter { margin-top: 10px; padding: 6px 10px; font-size: 14px; width: 300px; }
+  /* Summary box */
+  .summary-box {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    border: 1px solid #ccc;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #f9f9f9;
+    font-size: 14px;
+    text-align: right;
+  }
+</style>
+
+</head>
+<body>
+
+
+<div class="top-bar">
+  <button class="back-btn" onclick="window.location.href='index.html'">Back to Home</button>
+  <button class="nav-btn" onclick="window.location.href='products.html'">Products</button>
+  <button class="nav-btn" onclick="window.location.href='customers.html'">Customers</button>
+  <button class="nav-btn" onclick="window.location.href='cashcontrol.html'">Cash Control</button>
+  <button class="add-btn" onclick="window.location.href='invoice.html'">Add New Invoice</button>
+</div>
+
+<div class="summary-box" id="summary">
+  <div>Total USD: 0.00</div>
+  <div>Total Cost: 0.00</div>
+  <div>Margin: 0.00</div>
+  <div>Margin %: 0.00%</div>
+</div>
+
+<input type="text" id="filter" placeholder="Filter by client, item, date, or invoice #" />
+
+<table id="invoice-table">
+  <thead>
+    <tr>
+      <th>Invoice #</th>
+      <th>Date</th>
+      <th>Customer</th>
+      <th>Item Code</th>
+      <th>Description</th>
+      <th>Qty</th>
+      <th>Unit Price (USD)</th>
+      <th>Total USD</th>
+      <th>Total LBP</th>
+      <th>Total Cost</th>
+      <th>Margin</th>
+      <th>Margin %</th>
+      <th>Payment</th>
+      <th>Balance</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+// ===== BLOCK DIRECT ACCESS =====
+if (sessionStorage.getItem("fromIndex") !== "true") {
+    document.body.innerHTML = `
+    <div class="access-denied">
+        <h1>Access Denied</h1>
+        <p>Please open this app using <strong>index.html</strong>.</p>
+        <a href="index.html">Go to Home</a>
+    </div>
+    `;
+    throw "Access Denied"; // stop further execution
+}
+
+// Clear the flag so refreshing doesn't bypass
+sessionStorage.removeItem("fromIndex");
+// Load invoices or initialize
+let invoices = JSON.parse(localStorage.getItem('invoices')) || [];
+invoices.forEach(inv => { if (inv.payment === undefined) inv.payment = 0; });
+
+const tbody = document.querySelector('#invoice-table tbody');
+const filterInput = document.getElementById('filter');
+const summaryBox = document.getElementById('summary');
+
+function renderInvoices(filterText = '') {
+  tbody.innerHTML = '';
+
+  let totalUSDAll = 0;
+  let totalCostAll = 0;
+
+  invoices.forEach((inv, invIndex) => {
+    const totalInvoiceUSD = inv.items.reduce((s, i) => s + i.totalUSD, 0);
+    const balance = totalInvoiceUSD - (inv.payment || 0);
+
+    inv.items.forEach((item, idx) => {
+      const margin = item.totalUSD - item.totalCost;
+      const marginPercent = item.totalUSD ? (margin / item.totalUSD) * 100 : 0;
+
+      const rowText = `${inv.invoiceNumber} ${inv.date} ${inv.customer.name} ${item.code} ${item.description}`.toLowerCase();
+      if (filterText && !rowText.includes(filterText.toLowerCase())) return;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${inv.invoiceNumber}</td>
+        <td>${inv.date}</td>
+        <td>${inv.customer.name}</td>
+        <td>${item.code}</td>
+        <td>${item.description}</td>
+        <td>${item.qty}</td>
+        <td>${item.unitPrice.toFixed(2)}</td>
+        <td>${item.totalUSD.toFixed(2)}</td>
+        <td>${Math.round(item.totalUSD * (+inv.totals.lbp / inv.totals.usd)).toLocaleString()}</td>
+        <td>${item.totalCost.toFixed(2)}</td>
+        <td>${margin.toFixed(2)}</td>
+        <td>${marginPercent.toFixed(2)}%</td>
+        ${idx === 0 ? `<td rowspan="${inv.items.length}">
+          <input type="number" class="payment-input ${balance <= 0 ? 'fully-paid' : ''}"
+                 value="${inv.payment}"
+                 min="0"
+                 max="${totalInvoiceUSD}"
+                 onblur="updatePayment(${invIndex}, this.value)">
+        </td>` : '' }
+        ${idx === 0 ? `<td rowspan="${inv.items.length}" id="balance-${invIndex}" class="${balance <= 0 ? 'balance-paid' : 'balance-unpaid'}">${balance.toFixed(2)}</td>` : '' }
+        ${idx === 0 ? `<td rowspan="${inv.items.length}">
+          <button class="delete-btn" onclick="deleteInvoice(${invIndex})">Delete</button>
+        </td>` : '' }
+      `;
+      tbody.appendChild(tr);
+
+      totalUSDAll += item.totalUSD;
+      totalCostAll += item.totalCost;
+    });
+  });
+
+  updateSummary(totalUSDAll, totalCostAll);
+}
+
+function updateSummary(totalUSDAll = 0, totalCostAll = 0) {
+  if (totalUSDAll === 0 && totalCostAll === 0) {
+    invoices.forEach(inv => {
+      inv.items.forEach(item => {
+        totalUSDAll += item.totalUSD;
+        totalCostAll += item.totalCost;
+      });
+    });
+  }
+
+  const marginAll = totalUSDAll - totalCostAll;
+  const marginPercentAll = totalUSDAll ? (marginAll / totalUSDAll) * 100 : 0;
+
+  summaryBox.innerHTML = `
+    <div>Total USD: ${totalUSDAll.toFixed(2)}</div>
+    <div>Total Cost: ${totalCostAll.toFixed(2)}</div>
+    <div>Margin: ${marginAll.toFixed(2)}</div>
+    <div>Margin %: ${marginPercentAll.toFixed(2)}%</div>
+  `;
+}
+
+// Update payment
+function updatePayment(invIndex, value) {
+  const inv = invoices[invIndex];
+  const totalInvoiceUSD = inv.items.reduce((s, i) => s + i.totalUSD, 0);
+  let newPayment = parseFloat(value) || 0;
+
+  // Prevent overpayment
+  if (newPayment > totalInvoiceUSD) newPayment = totalInvoiceUSD;
+
+  const diff = newPayment - (inv.payment || 0);
+  inv.payment = newPayment;
+
+  if (diff !== 0) {
+    let cashControl = JSON.parse(localStorage.getItem('cashControl')) || [];
+    cashControl.push({
+      date: new Date().toISOString().split('T')[0],
+      description: `Payment change - Invoice ${inv.invoiceNumber} (${inv.customer.name})`,
+      debit: diff > 0 ? diff : 0,
+      credit: diff < 0 ? Math.abs(diff) : 0
+    });
+    localStorage.setItem('cashControl', JSON.stringify(cashControl));
+  }
+
+  localStorage.setItem('invoices', JSON.stringify(invoices));
+
+  // Update balance cell
+  const balance = totalInvoiceUSD - newPayment;
+  const balanceCell = document.getElementById(`balance-${invIndex}`);
+  if (balanceCell) {
+    balanceCell.innerText = balance.toFixed(2);
+    balanceCell.className = balance <= 0 ? 'balance-paid' : 'balance-unpaid';
+  }
+
+  // Update payment input color
+  const paymentInput = document.querySelector(`input.payment-input[onblur="updatePayment(${invIndex}, this.value)"]`);
+  if (paymentInput) {
+    paymentInput.className = `payment-input ${balance <= 0 ? 'fully-paid' : ''}`;
+  }
+
+  updateSummary();
+}
+
+// Delete invoice
+function deleteInvoice(index) {
+  if (confirm('Delete this invoice?')) {
+    invoices.splice(index, 1);
+    localStorage.setItem('invoices', JSON.stringify(invoices));
+    renderInvoices(filterInput.value);
+  }
+}
+
+// Filter invoices
+filterInput.addEventListener('input', () => renderInvoices(filterInput.value));
+
+// Initial render
+renderInvoices();
+</script>
+
+</body>
+</html>
