@@ -74,7 +74,7 @@
   </div>
 
   <h1>Customers Page</h1>
-  <p>Here you can add and manage customers.</p>
+  <p>Here you can add and manage Customers.</p>
 
   <!-- Customer form -->
   <form id="customer-form">
@@ -84,7 +84,7 @@
   </form>
 
   <!-- Customer list -->
-  <table id="customers-table">
+  <table id="Customers-table">
     <thead>
       <tr>
         <th>Name</th>
@@ -104,14 +104,14 @@ sessionStorage.removeItem("fromIndex");
     }
 
     const form = document.getElementById('customer-form');
-    const tableBody = document.querySelector('#customers-table tbody');
+    const tableBody = document.querySelector('#Customers-table tbody');
 
-    let customers = JSON.parse(localStorage.getItem('customers')) || [];
+    let Customers = JSON.parse(localStorage.getItem('Customers')) || [];
     let editIndex = null;
 
     function renderCustomers() {
       tableBody.innerHTML = '';
-      customers.forEach((c, index) => {
+      Customers.forEach((c, index) => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${c.name}</td>
@@ -135,25 +135,25 @@ sessionStorage.removeItem("fromIndex");
       const payload = { name, phone };
 
       if (editIndex !== null) {
-        customers[editIndex] = payload;
+        Customers[editIndex] = payload;
         editIndex = null;
       } else {
-        customers.push(payload);
+        Customers.push(payload);
       }
 
-      localStorage.setItem('customers', JSON.stringify(customers));
+      localStorage.setItem('Customers', JSON.stringify(Customers));
       renderCustomers();
       form.reset();
     });
 
     window.deleteCustomer = function(index) {
-      customers.splice(index, 1);
-      localStorage.setItem('customers', JSON.stringify(customers));
+      Customers.splice(index, 1);
+      localStorage.setItem('Customers', JSON.stringify(Customers));
       renderCustomers();
     };
 
     window.editCustomer = function(index) {
-      const c = customers[index];
+      const c = Customers[index];
       document.getElementById('name').value = c.name;
       document.getElementById('phone').value = c.phone;
       editIndex = index;
