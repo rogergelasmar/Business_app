@@ -109,7 +109,7 @@ if (sessionStorage.getItem("fromIndex") !== "true") {
 // Clear the flag so refreshing doesn't bypass
 sessionStorage.removeItem("fromIndex");
 // Load invoices or initialize
-let invoices = JSON.parse(localStorage.getItem('invoices')) || [];
+let invoices = JSON.parse(https://raw.githubusercontent.com/rogergelasmar/Business_app/refs/heads/main/data.json.getItem('invoices')) || [];
 invoices.forEach(inv => { if (inv.payment === undefined) inv.payment = 0; });
 
 const tbody = document.querySelector('#invoice-table tbody');
@@ -203,17 +203,17 @@ function updatePayment(invIndex, value) {
   inv.payment = newPayment;
 
   if (diff !== 0) {
-    let cashControl = JSON.parse(localStorage.getItem('cashControl')) || [];
+    let cashControl = JSON.parse(https://raw.githubusercontent.com/rogergelasmar/Business_app/refs/heads/main/data.json.getItem('cashControl')) || [];
     cashControl.push({
       date: new Date().toISOString().split('T')[0],
       description: `Payment change - Invoice ${inv.invoiceNumber} (${inv.customer.name})`,
       debit: diff > 0 ? diff : 0,
       credit: diff < 0 ? Math.abs(diff) : 0
     });
-    localStorage.setItem('cashControl', JSON.stringify(cashControl));
+    https://raw.githubusercontent.com/rogergelasmar/Business_app/refs/heads/main/data.json.setItem('cashControl', JSON.stringify(cashControl));
   }
 
-  localStorage.setItem('invoices', JSON.stringify(invoices));
+  https://raw.githubusercontent.com/rogergelasmar/Business_app/refs/heads/main/data.json.setItem('invoices', JSON.stringify(invoices));
 
   // Update balance cell
   const balance = totalInvoiceUSD - newPayment;
@@ -236,7 +236,7 @@ function updatePayment(invIndex, value) {
 function deleteInvoice(index) {
   if (confirm('Delete this invoice?')) {
     invoices.splice(index, 1);
-    localStorage.setItem('invoices', JSON.stringify(invoices));
+    https://raw.githubusercontent.com/rogergelasmar/Business_app/refs/heads/main/data.json.setItem('invoices', JSON.stringify(invoices));
     renderInvoices(filterInput.value);
   }
 }
