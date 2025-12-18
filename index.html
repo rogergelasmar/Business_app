@@ -119,7 +119,7 @@
     <h1>Stock & Invoicing</h1>
     <nav>
       <button onclick="openProducts()">Products</button>
-      <button onclick="opencustomers()">customers</button>
+      <button onclick="openCustomers()">Customers</button>
       <button onclick="openInvoices()">Invoices</button>
       <button class="primary" onclick="openInvoice()">New Invoice</button>
       <button onclick="openCashControl()">Cash Control</button>
@@ -169,9 +169,9 @@
     window.location.href = "products.html";  // navigate to the page
 }
 
-  function opencustomers() {
+  function openCustomers() {
     sessionStorage.setItem("fromIndex", "true"); // set the flag
-    window.location.href = "customers.html";  // navigate to the page
+    window.location.href = "Customers.html";  // navigate to the page
 }
 
   function openInvoices() {
