@@ -7,4 +7,8 @@
   "lastInvoiceNumber": "15",
   "floorsData": "[{\"floorNumber\":1,\"status\":\"Rented\",\"left\":65,\"top\":763},{\"floorNumber\":2,\"status\":\"Available\",\"left\":283,\"top\":757},{\"floorNumber\":3,\"status\":\"Available\",\"left\":63,\"top\":711},{\"floorNumber\":4,\"status\":\"Available\",\"left\":271,\"top\":704},{\"floorNumber\":5,\"status\":\"Available\",\"left\":73,\"top\":650},{\"floorNumber\":6,\"status\":\"Available\",\"left\":281,\"top\":644},{\"floorNumber\":7,\"status\":\"Available\",\"left\":81,\"top\":584},{\"floorNumber\":8,\"status\":\"Available\",\"left\":283,\"top\":575},{\"floorNumber\":9,\"status\":\"Available\",\"left\":77,\"top\":526},{\"floorNumber\":10,\"status\":\"Available\",\"left\":283,\"top\":523},{\"floorNumber\":11,\"status\":\"Available\",\"left\":74,\"top\":467},{\"floorNumber\":12,\"status\":\"Available\",\"left\":292,\"top\":466},{\"floorNumber\":13,\"status\":\"Available\",\"left\":77,\"top\":414},{\"floorNumber\":14,\"status\":\"Available\",\"left\":294,\"top\":406},{\"floorNumber\":15,\"status\":\"Available\",\"left\":77,\"top\":344},{\"floorNumber\":16,\"status\":\"Available\",\"left\":294,\"top\":342},{\"floorNumber\":17,\"status\":\"Available\",\"left\":86,\"top\":282}]",
   "tasks": "[\"Roger\",\"Catherine\",\"Naya\",\"Gaya\"]"
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> e764157bd1bf754b404ab17c5c06e9d1f4131b4c

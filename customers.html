@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Customers</title>
+  <title>customers</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
   .access-denied {
@@ -73,7 +73,7 @@
     <button class="nav-btn" onclick="location.href='cashcontrol.html'">Cash Control</button>
   </div>
 
-  <h1>Customers Page</h1>
+  <h1>customers Page</h1>
   <p>Here you can add and manage customers.</p>
 
   <!-- Customer form -->
@@ -96,17 +96,6 @@
   </table>
 
   <script>
-  // ===== BLOCK DIRECT ACCESS =====
-if (sessionStorage.getItem("fromIndex") !== "true") {
-    document.body.innerHTML = `
-    <div class="access-denied">
-        <h1>Access Denied</h1>
-        <p>Please open this app using <strong>index.html</strong>.</p>
-        <a href="index.html">Go to Home</a>
-    </div>
-    `;
-    throw "Access Denied"; // stop further execution
-}
 
 // Clear the flag so refreshing doesn't bypass
 sessionStorage.removeItem("fromIndex");
@@ -120,7 +109,7 @@ sessionStorage.removeItem("fromIndex");
     let customers = JSON.parse(localStorage.getItem('customers')) || [];
     let editIndex = null;
 
-    function renderCustomers() {
+    function rendercustomers() {
       tableBody.innerHTML = '';
       customers.forEach((c, index) => {
         const row = document.createElement('tr');
@@ -153,14 +142,14 @@ sessionStorage.removeItem("fromIndex");
       }
 
       localStorage.setItem('customers', JSON.stringify(customers));
-      renderCustomers();
+      rendercustomers();
       form.reset();
     });
 
     window.deleteCustomer = function(index) {
       customers.splice(index, 1);
       localStorage.setItem('customers', JSON.stringify(customers));
-      renderCustomers();
+      rendercustomers();
     };
 
     window.editCustomer = function(index) {
@@ -171,7 +160,7 @@ sessionStorage.removeItem("fromIndex");
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    renderCustomers();
+    rendercustomers();
   </script>
 </body>
 </html>
