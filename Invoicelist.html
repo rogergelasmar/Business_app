@@ -20,35 +20,38 @@
   text-decoration: none;
   color: blue;
 }
-body { font-family: Arial, sans-serif; margin: 20px; }
-.top-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
-.back-btn, .add-btn, .nav-btn { padding: 12px 18px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; }
-.back-btn { background: #ef4444; color: #fff; }
-.add-btn { background: #22c55e; color: #fff; }
-.nav-btn { background: #334155; color: #fff; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 14px; }
-th { background-color: #f3f3f3; }
-input.payment-input { width: 100px; padding: 4px; }
-input.payment-input.fully-paid { background-color: #d1fae5; }
-.balance-paid { color: green; font-weight: bold; }
-.balance-unpaid { color: red; font-weight: bold; }
-.delete-btn { background: #ef4444; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; }
-#filter { margin-top: 10px; padding: 6px 10px; font-size: 14px; width: 300px; }
-.summary-box {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  border: 1px solid #ccc;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background: #f9f9f9;
-  font-size: 14px;
-  text-align: right;
-}
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  .top-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .back-btn, .add-btn, .nav-btn { padding: 12px 18px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; }
+  .back-btn { background: #ef4444; color: #fff; }
+  .add-btn { background: #22c55e; color: #fff; }
+  .nav-btn { background: #334155; color: #fff; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 14px; }
+  th { background-color: #f3f3f3; }
+  input.payment-input { width: 100px; padding: 4px; }
+  input.payment-input.fully-paid { background-color: #d1fae5; } /* light green when fully paid */
+  .balance-paid { color: green; font-weight: bold; }
+  .balance-unpaid { color: red; font-weight: bold; }
+  .delete-btn { background: #ef4444; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; }
+  #filter { margin-top: 10px; padding: 6px 10px; font-size: 14px; width: 300px; }
+  /* Summary box */
+  .summary-box {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    border: 1px solid #ccc;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #f9f9f9;
+    font-size: 14px;
+    text-align: right;
+  }
 </style>
+
 </head>
 <body>
+
 
 <div class="top-bar">
   <button class="back-btn" onclick="window.location.href='index.html'">Back to Home</button>
@@ -100,34 +103,22 @@ if (sessionStorage.getItem("fromIndex") !== "true") {
         <a href="index.html">Go to Home</a>
     </div>
     `;
-    throw "Access Denied";
+    throw "Access Denied"; // stop further execution
 }
 
+// Clear the flag so refreshing doesn't bypass
 sessionStorage.removeItem("fromIndex");
+// Load invoices or initialize
+let invoices = JSON.parse(localStorage.getItem('invoices')) || [];
+invoices.forEach(inv => { if (inv.payment === undefined) inv.payment = 0; });
 
-// ===== FETCH INVOICES FROM GITHUB PAGES =====
-const dataUrl = "https://rogergelasmar.github.io/Business_app/data.json"; // GitHub Pages URL
-let invoices = [];
 const tbody = document.querySelector('#invoice-table tbody');
 const filterInput = document.getElementById('filter');
 const summaryBox = document.getElementById('summary');
 
-fetch(dataUrl)
-  .then(res => res.json())
-  .then(data => {
-      invoices = data.invoices || [];
-      invoices.forEach(inv => { if (inv.payment === undefined) inv.payment = 0; });
-      renderInvoices();
-  })
-  .catch(err => {
-      console.error("Failed to load invoices from GitHub Pages:", err);
-      invoices = [];
-      renderInvoices();
-  });
-
-// ===== FUNCTIONS =====
 function renderInvoices(filterText = '') {
   tbody.innerHTML = '';
+
   let totalUSDAll = 0;
   let totalCostAll = 0;
 
@@ -205,6 +196,7 @@ function updatePayment(invIndex, value) {
   const totalInvoiceUSD = inv.items.reduce((s, i) => s + i.totalUSD, 0);
   let newPayment = parseFloat(value) || 0;
 
+  // Prevent overpayment
   if (newPayment > totalInvoiceUSD) newPayment = totalInvoiceUSD;
 
   const diff = newPayment - (inv.payment || 0);
@@ -223,6 +215,7 @@ function updatePayment(invIndex, value) {
 
   localStorage.setItem('invoices', JSON.stringify(invoices));
 
+  // Update balance cell
   const balance = totalInvoiceUSD - newPayment;
   const balanceCell = document.getElementById(`balance-${invIndex}`);
   if (balanceCell) {
@@ -230,6 +223,7 @@ function updatePayment(invIndex, value) {
     balanceCell.className = balance <= 0 ? 'balance-paid' : 'balance-unpaid';
   }
 
+  // Update payment input color
   const paymentInput = document.querySelector(`input.payment-input[onblur="updatePayment(${invIndex}, this.value)"]`);
   if (paymentInput) {
     paymentInput.className = `payment-input ${balance <= 0 ? 'fully-paid' : ''}`;
@@ -249,6 +243,9 @@ function deleteInvoice(index) {
 
 // Filter invoices
 filterInput.addEventListener('input', () => renderInvoices(filterInput.value));
+
+// Initial render
+renderInvoices();
 </script>
 
 </body>
