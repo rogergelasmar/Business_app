@@ -108,6 +108,22 @@ if (sessionStorage.getItem("fromIndex") !== "true") {
 
 // Clear the flag so refreshing doesn't bypass
 sessionStorage.removeItem("fromIndex");
+  // Fetch invoices from GitHub
+const dataUrl = "https://raw.githubusercontent.com/rogergelasmar/Business_app/main/data.json";
+let invoices = [];
+
+fetch(dataUrl)
+  .then(response => response.json())
+  .then(data => {
+    invoices = JSON.parse(data.invoices || "[]");
+    invoices.forEach(inv => { if (inv.payment === undefined) inv.payment = 0; });
+    renderInvoices();
+  })
+  .catch(err => {
+    console.error("Failed to load invoices from GitHub:", err);
+    invoices = [];
+    renderInvoices();
+  });
 // Load invoices or initialize
 let invoices = JSON.parse(localStorage.getItem('invoices')) || [];
 invoices.forEach(inv => { if (inv.payment === undefined) inv.payment = 0; });
