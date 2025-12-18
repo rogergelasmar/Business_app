@@ -52,7 +52,6 @@
 </head>
 <body>
 
-
 <div class="top-bar">
   <button class="back-btn" onclick="window.location.href='index.html'">Back to Home</button>
   <button class="nav-btn" onclick="window.location.href='products.html'">Products</button>
@@ -103,14 +102,18 @@ if (sessionStorage.getItem("fromIndex") !== "true") {
         <a href="index.html">Go to Home</a>
     </div>
     `;
-    throw "Access Denied"; // stop further execution
+    throw "Access Denied";
 }
 
-// Clear the flag so refreshing doesn't bypass
+// Clear the flag
 sessionStorage.removeItem("fromIndex");
-  // Fetch invoices from GitHub
-const dataUrl = "https://raw.githubusercontent.com/rogergelasmar/Business_app/main/data.json";
+
+// ===== FETCH INVOICES FROM GITHUB =====
+const dataUrl = "https://raw.githubusercontent.com/rogergelasmar/Business_app/refs/heads/main/data.json";
 let invoices = [];
+const tbody = document.querySelector('#invoice-table tbody');
+const filterInput = document.getElementById('filter');
+const summaryBox = document.getElementById('summary');
 
 fetch(dataUrl)
   .then(response => response.json())
@@ -124,14 +127,8 @@ fetch(dataUrl)
     invoices = [];
     renderInvoices();
   });
-// Load invoices or initialize
-let invoices = JSON.parse(localStorage.getItem('invoices')) || [];
-invoices.forEach(inv => { if (inv.payment === undefined) inv.payment = 0; });
 
-const tbody = document.querySelector('#invoice-table tbody');
-const filterInput = document.getElementById('filter');
-const summaryBox = document.getElementById('summary');
-
+// ===== FUNCTIONS =====
 function renderInvoices(filterText = '') {
   tbody.innerHTML = '';
 
@@ -212,7 +209,6 @@ function updatePayment(invIndex, value) {
   const totalInvoiceUSD = inv.items.reduce((s, i) => s + i.totalUSD, 0);
   let newPayment = parseFloat(value) || 0;
 
-  // Prevent overpayment
   if (newPayment > totalInvoiceUSD) newPayment = totalInvoiceUSD;
 
   const diff = newPayment - (inv.payment || 0);
@@ -231,7 +227,6 @@ function updatePayment(invIndex, value) {
 
   localStorage.setItem('invoices', JSON.stringify(invoices));
 
-  // Update balance cell
   const balance = totalInvoiceUSD - newPayment;
   const balanceCell = document.getElementById(`balance-${invIndex}`);
   if (balanceCell) {
@@ -239,7 +234,6 @@ function updatePayment(invIndex, value) {
     balanceCell.className = balance <= 0 ? 'balance-paid' : 'balance-unpaid';
   }
 
-  // Update payment input color
   const paymentInput = document.querySelector(`input.payment-input[onblur="updatePayment(${invIndex}, this.value)"]`);
   if (paymentInput) {
     paymentInput.className = `payment-input ${balance <= 0 ? 'fully-paid' : ''}`;
@@ -259,9 +253,6 @@ function deleteInvoice(index) {
 
 // Filter invoices
 filterInput.addEventListener('input', () => renderInvoices(filterInput.value));
-
-// Initial render
-renderInvoices();
 </script>
 
 </body>
